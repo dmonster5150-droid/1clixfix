@@ -1,0 +1,507 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>1ClikFix — Demo</title>
+  <style>
+    :root{--accent:#0b74de;--muted:#666}
+    body{font-family:Inter,ui-sans-serif,system-ui,Arial,Helvetica,sans-serif;margin:0;background:#f5f7fb;color:#111}
+    header{background:white;padding:12px 20px;box-shadow:0 2px 6px rgba(16,24,40,0.06);display:flex;align-items:center;gap:16px}
+    header h1{margin:0;font-size:20px;color:var(--accent)}
+    .container{max-width:980px;margin:28px auto;padding:16px}
+    .card{background:white;padding:18px;border-radius:10px;box-shadow:0 6px 18px rgba(16,24,40,0.06);margin-bottom:18px}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    input,select,textarea,button{font-size:14px;padding:10px;border-radius:8px;border:1px solid #ddd;outline:none}
+    textarea{min-height:100px}
+    .btn{background:var(--accent);color:white;border:none;cursor:pointer}
+    .muted{color:var(--muted);font-size:13px}
+    .small{font-size:13px}
+    nav{display:flex;gap:8px}
+    nav button{background:transparent;border:1px solid #eee;padding:8px 12px;border-radius:8px;cursor:pointer}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px;border-bottom:1px solid #f0f0f0;text-align:left}
+    .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+    .day{background:#fff;padding:8px;border-radius:8px;min-height:100px}
+    .job-card{background:#eef6ff;padding:8px;margin-top:8px;border-radius:8px}
+    .hidden{display:none}
+    .flex{display:flex;align-items:center}
+    .spacer{flex:1}
+    label{display:block;margin-bottom:6px;font-weight:600}
+    .link{color:var(--accent);cursor:pointer;text-decoration:underline}
+    footer{padding:18px;text-align:center;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>1ClikFix</h1>
+    <nav>
+      <button onclick="show('home')">Home</button>
+      <button onclick="show('client-register')">Client Register</button>
+      <button onclick="show('client-login')">Client Login</button>
+      <button onclick="show('provider-subscribe')">Provider Subscribe</button>
+      <button onclick="show('provider-register')">Provider Register</button>
+      <button onclick="show('provider-login')">Provider Login</button>
+      <button onclick="show('calendar-view')">Calendar</button>
+    </nav>
+    <div class="spacer"></div>
+    <div id="userBadge" class="muted small"></div>
+  </header>  <main class="container"><!-- Home -->
+<section id="home" class="card">
+  <h2>Welcome to 1ClikFix (Demo)</h2>
+  <p class="muted">This is a static demo you can copy/paste to Netlify. It uses your browser's localStorage to store users, jobs and calendar. For production you'll want a secure backend, database, authentication and payment webhook integration.</p>
+  <ul>
+    <li>Clients: register, confirm (simulated), post job, set price and date.</li>
+    <li>Providers: subscribe via Square link, register, login, view available jobs based on skills, accept jobs, finish jobs, receive ratings.</li>
+  </ul>
+</section>
+
+<!-- CLIENT REGISTER -->
+<section id="client-register" class="card hidden">
+  <h3>Client Registration</h3>
+  <div class="row">
+    <div style="flex:1">
+      <label>Full name</label>
+      <input id="c_name">
+      <label>Phone #</label>
+      <input id="c_phone">
+      <label>Email</label>
+      <input id="c_email">
+      <label>Address (project location)</label>
+      <input id="c_address">
+      <label>Username</label>
+      <input id="c_user">
+      <label>Password</label>
+      <input id="c_pass" type="password">
+      <p class="muted small">After clicking Register you'll be asked to confirm via a simulated code (since this is a static demo).</p>
+      <button class="btn" onclick="clientRegister()">Register</button>
+    </div>
+  </div>
+</section>
+
+<!-- CLIENT CONFIRMATION -->
+<section id="client-confirm" class="card hidden">
+  <h3>Confirm Account</h3>
+  <p id="client-confirm-msg"></p>
+  <label>Enter confirmation code</label>
+  <input id="client_confirm_code">
+  <button class="btn" onclick="clientConfirm()">Confirm</button>
+</section>
+
+<!-- CLIENT LOGIN -->
+<section id="client-login" class="card hidden">
+  <h3>Client Sign In</h3>
+  <label>Username</label>
+  <input id="c_login_user">
+  <label>Password</label>
+  <input id="c_login_pass" type="password">
+  <button class="btn" onclick="clientLogin()">Sign In</button>
+</section>
+
+<!-- CLIENT DESCRIBE JOB -->
+<section id="client-job" class="card hidden">
+  <h3>Describe the Job</h3>
+  <label>Short title</label>
+  <input id="job_title">
+  <label>Detailed description</label>
+  <textarea id="job_description"></textarea>
+  <label>Type of job</label>
+  <select id="job_type">
+    <option>Handyman</option>
+    <option>Plumbing</option>
+    <option>Electrical</option>
+    <option>Landscaping</option>
+    <option>General Contractor</option>
+  </select>
+  <label>Region</label>
+  <select id="job_region">
+    <option value="urban">Urban</option>
+    <option value="suburban">Suburban</option>
+    <option value="rural">Rural</option>
+  </select>
+  <button class="btn" onclick="toPricing()">Get Pricing Quotes</button>
+</section>
+
+<!-- PRICING -->
+<section id="pricing" class="card hidden">
+  <h3>Pricing Estimates</h3>
+  <div id="pricing_estimates" class="muted"></div>
+  <label>Amount you are willing to pay</label>
+  <input id="client_offer" placeholder="e.g. 150.00">
+  <button class="btn" onclick="toFinalizeJob()">Continue</button>
+</section>
+
+<!-- FINALIZE JOB -->
+<section id="finalize" class="card hidden">
+  <h3>Finalize Job</h3>
+  <div id="final_summary" class="muted"></div>
+  <label>Start date</label>
+  <input id="job_date" type="date">
+  <button class="btn" onclick="submitJob()">Submit Job</button>
+</section>
+
+<!-- PROVIDER SUBSCRIBE -->
+<section id="provider-subscribe" class="card hidden">
+  <h3>Provider Subscription</h3>
+  <p>To subscribe to 1ClikFix as a service provider pay $20.99 using the Square link below. After payment, click 'I paid' and proceed to registration.</p>
+  <p><a href="https://square.link/u/FcYqzVln" target="_blank" class="link">Pay $20.99 (Square)</a></p>
+  <button class="btn" onclick="show('provider-register')">I paid — Register</button>
+</section>
+
+<!-- PROVIDER REGISTER -->
+<section id="provider-register" class="card hidden">
+  <h3>Provider Registration</h3>
+  <div class="row">
+    <div style="flex:1">
+      <label>Full name</label>
+      <input id="p_name">
+      <label>Business name</label>
+      <input id="p_business">
+      <label>Phone #</label>
+      <input id="p_phone">
+      <label>Email</label>
+      <input id="p_email">
+      <label>DOB</label>
+      <input id="p_dob" type="date">
+      <label>Occupation / skills (comma separated)</label>
+      <input id="p_skills" placeholder="handyman,plumbing,electrical">
+      <label>US Citizen?</label>
+      <select id="p_citizen"><option value="yes">Yes</option><option value="no">No</option></select>
+      <label>Has tools?</label>
+      <select id="p_tools"><option value="yes">Yes</option><option value="no">No</option></select>
+      <label>Vehicle?</label>
+      <select id="p_vehicle"><option value="yes">Yes</option><option value="no">No</option></select>
+      <label>English?</label>
+      <select id="p_english"><option value="yes">Yes</option><option value="no">No</option></select>
+      <label>Certifications (if any)</label>
+      <input id="p_certs">
+      <label>Background check (simulate pass/fail)</label>
+      <select id="p_bgc"><option value="pass">Pass</option><option value="fail">Fail</option></select>
+      <label>Username</label>
+      <input id="p_user">
+      <label>Password</label>
+      <input id="p_pass" type="password">
+      <p class="muted small">Providers who fail the background check cannot log in.</p>
+      <button class="btn" onclick="providerRegister()">Register</button>
+    </div>
+  </div>
+</section>
+
+<!-- PROVIDER LOGIN -->
+<section id="provider-login" class="card hidden">
+  <h3>Provider Sign In</h3>
+  <label>Username</label>
+  <input id="p_login_user">
+  <label>Password</label>
+  <input id="p_login_pass" type="password">
+  <button class="btn" onclick="providerLogin()">Sign In</button>
+</section>
+
+<!-- CALENDAR VIEW (both clients and providers can see) -->
+<section id="calendar-view" class="card hidden">
+  <h3>Calendar — Jobs & Schedule</h3>
+  <div id="calendar_container"></div>
+  <h4>All Jobs</h4>
+  <div id="all_jobs_list"></div>
+</section>
+
+<!-- PROVIDER DASHBOARD (after login) -->
+<section id="provider-dashboard" class="card hidden">
+  <h3>Provider Dashboard</h3>
+  <p class="muted">Available jobs matching your skills appear below. Click "View" to accept.</p>
+  <div id="provider_jobs_list"></div>
+</section>
+
+<!-- RATING PAGE -->
+<section id="rate-job" class="card hidden">
+  <h3>Rate Completed Job</h3>
+  <div id="rate_summary"></div>
+  <label>Rating (1-5)</label>
+  <select id="rating_val"><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select>
+  <label>Comments</label>
+  <textarea id="rating_comments"></textarea>
+  <button class="btn" onclick="submitRating()">Submit Rating & Remove Job</button>
+</section>
+
+<footer class="muted">Demo — not for production. For production integrate a backend, payment webhook and secure auth.</footer>
+
+  </main>  <script>
+    // --------------------------- Utilities & Storage ---------------------------
+    function save(key, val){localStorage.setItem(key, JSON.stringify(val))}
+    function load(key){try{return JSON.parse(localStorage.getItem(key)||'null')}catch(e){return null}}
+
+    function uid(prefix='id'){return prefix+Date.now()+Math.floor(Math.random()*999)}
+
+    // initialize arrays
+    if(!load('clients')) save('clients',[])
+    if(!load('providers')) save('providers',[])
+    if(!load('jobs')) save('jobs',[])
+
+    let session = {type:null,user:null} // in-memory session
+
+    function show(id){document.querySelectorAll('main section').forEach(s=>s.classList.add('hidden'))
+      document.getElementById(id).classList.remove('hidden')
+      updateUserBadge()
+      if(id==='calendar-view') renderCalendar()
+      if(id==='provider-dashboard') renderProviderJobs()
+      if(id==='calendar-view' || id==='provider-dashboard') renderAllJobsList()
+    }
+
+    function updateUserBadge(){
+      const b=document.getElementById('userBadge')
+      if(session.user) b.textContent = session.type+': '+session.user.username
+      else b.textContent = ''
+    }
+
+    // --------------------------- CLIENT FLOW ---------------------------
+    function clientRegister(){
+      const name=document.getElementById('c_name').value.trim();
+      const phone=document.getElementById('c_phone').value.trim();
+      const email=document.getElementById('c_email').value.trim();
+      const address=document.getElementById('c_address').value.trim();
+      const user=document.getElementById('c_user').value.trim();
+      const pass=document.getElementById('c_pass').value;
+      if(!name||!phone||!email||!user||!pass){alert('fill required fields');return}
+      let clients=load('clients')||[]
+      if(clients.find(c=>c.username===user)){alert('username taken');return}
+      const code = Math.floor(100000+Math.random()*900000).toString()
+      const id=uid('client_')
+      clients.push({id,name,phone,email,address,username:user,password:btoa(pass),confirmed:false,confirmCode:code})
+      save('clients',clients)
+      // simulate sending code
+      document.getElementById('client-confirm-msg').innerText = 'Confirmation code (simulated): '+code + '\nPlease enter it below.'
+      document.getElementById('client-confirm').classList.remove('hidden')
+      show('client-confirm')
+    }
+
+    function clientConfirm(){
+      const code=document.getElementById('client_confirm_code').value.trim()
+      let clients=load('clients')||[]
+      let c = clients.find(x=>x.confirmCode===code)
+      if(!c){alert('invalid code') ; return}
+      c.confirmed = true
+      delete c.confirmCode
+      save('clients',clients)
+      alert('confirmed — you may sign in now')
+      show('client-login')
+    }
+
+    function clientLogin(){
+      const u=document.getElementById('c_login_user').value.trim();
+      const p=document.getElementById('c_login_pass').value
+      let clients=load('clients')||[]
+      const user = clients.find(x=>x.username===u && x.password===btoa(p))
+      if(!user){alert('invalid credentials') ; return}
+      if(!user.confirmed){alert('account not confirmed') ; return}
+      session = {type:'client', user:user}
+      alert('signed in as client')
+      show('client-job')
+    }
+
+    // Pricing estimates stub
+    function toPricing(){
+      const title = document.getElementById('job_title').value.trim();
+      const desc = document.getElementById('job_description').value.trim();
+      const type = document.getElementById('job_type').value;
+      const region = document.getElementById('job_region').value;
+      if(!title||!desc){alert('enter title & description');return}
+      // store temporarily in sessionStorage
+      session.jobDraft = {title,desc,type,region}
+      // quick pricing logic
+      const base = {urban:120,suburban:90,rural:70}[region] || 80
+      const skillMultiplier = {Handyman:1,Plumbing:1.6,Electrical:1.8,Landscaping:1.2,'General Contractor':2}[type] || 1
+      const estLow = Math.round(base*skillMultiplier*0.5)
+      const estMid = Math.round(base*skillMultiplier)
+      const estHigh = Math.round(base*skillMultiplier*1.5)
+      document.getElementById('pricing_estimates').innerText = `Estimated range for ${type} in ${region}: $${estLow} - $${estHigh}`
+      show('pricing')
+    }
+
+    function toFinalizeJob(){
+      const offer = document.getElementById('client_offer').value.trim()
+      if(!offer || isNaN(Number(offer))){alert('enter numeric offer');return}
+      session.jobDraft.offer = Number(offer)
+      // prefill final summary
+      document.getElementById('final_summary').innerText = `Title: ${session.jobDraft.title}\nDesc: ${session.jobDraft.desc}\nOffer: $${session.jobDraft.offer}`
+      show('finalize')
+    }
+
+    function submitJob(){
+      if(!session.user || session.type!=='client'){alert('you must be signed in as client'); return}
+      const date = document.getElementById('job_date').value
+      if(!date){alert('select date');return}
+      const jobs = load('jobs')||[]
+      const job = {id:uid('job_'),clientId:session.user.id,title:session.jobDraft.title,description:session.jobDraft.desc,type:session.jobDraft.type,region:session.jobDraft.region,offer:session.jobDraft.offer,date,created:Date.now(),status:'open'}
+      jobs.push(job)
+      save('jobs',jobs)
+      alert('job submitted and added to calendar')
+      session.jobDraft = null
+      show('calendar-view')
+    }
+
+    // --------------------------- PROVIDER FLOW ---------------------------
+    function providerRegister(){
+      const name=document.getElementById('p_name').value.trim();
+      const business=document.getElementById('p_business').value.trim();
+      const phone=document.getElementById('p_phone').value.trim();
+      const email=document.getElementById('p_email').value.trim();
+      const dob=document.getElementById('p_dob').value;
+      const skills=document.getElementById('p_skills').value.trim();
+      const citizen=document.getElementById('p_citizen').value;
+      const tools=document.getElementById('p_tools').value;
+      const vehicle=document.getElementById('p_vehicle').value;
+      const english=document.getElementById('p_english').value;
+      const certs=document.getElementById('p_certs').value;
+      const bgc=document.getElementById('p_bgc').value;
+      const user=document.getElementById('p_user').value.trim();
+      const pass=document.getElementById('p_pass').value;
+      if(!name||!phone||!email||!user||!pass||!skills){alert('fill required fields');return}
+      let providers=load('providers')||[]
+      if(providers.find(p=>p.username===user)){alert('username taken');return}
+      const id=uid('prov_')
+      const record = {id,name,business,phone,email,dob,skills:skills.split(',').map(s=>s.trim().toLowerCase()),citizen,tools,vehicle,english,certs,bgc,username:user,password:btoa(pass),verified:false}
+      // simulate verification: background check must be 'pass'
+      if(bgc==='pass') record.verified = true
+      providers.push(record)
+      save('providers',providers)
+      if(!record.verified){alert('background check failed — cannot be verified')}
+      alert('provider registered. If verified you may sign in')
+      show('provider-login')
+    }
+
+    function providerLogin(){
+      const u=document.getElementById('p_login_user').value.trim();
+      const p=document.getElementById('p_login_pass').value
+      let providers=load('providers')||[]
+      const user = providers.find(x=>x.username===u && x.password===btoa(p))
+      if(!user){alert('invalid credentials');return}
+      if(!user.verified){alert('provider not verified — background check failed');return}
+      session = {type:'provider', user:user}
+      alert('signed in as provider')
+      show('provider-dashboard')
+    }
+
+    function renderAllJobsList(){
+      const jobs = load('jobs')||[]
+      const clients = load('clients')||[]
+      const el = document.getElementById('all_jobs_list')
+      el.innerHTML = jobs.map(j=>{
+        const c = clients.find(x=>x.id===j.clientId)
+        return `<div class="job-card"><strong>${j.title}</strong> — ${j.type} — ${j.date} — $${j.offer}<div class="muted small">client: ${c?c.name:'unknown'} ${c?c.phone:''}</div></div>`
+      }).join('')
+    }
+
+    function renderCalendar(){
+      // simple list by date
+      const jobs = load('jobs')||[]
+      const container = document.getElementById('calendar_container')
+      if(!jobs.length){container.innerHTML='<div class="muted">No jobs posted yet.</div>'; return}
+      const byDate = {}
+      jobs.forEach(j=>{byDate[j.date]=byDate[j.date]||[]; byDate[j.date].push(j)})
+      const dates = Object.keys(byDate).sort()
+      container.innerHTML = dates.map(d=>`<div class="card"><strong>${d}</strong>${byDate[d].map(j=>`<div class="job-card"><strong>${j.title}</strong> — ${j.type} — $${j.offer} <button onclick="viewJob('${j.id}')">View</button></div>`).join('')}</div>`).join('')
+    }
+
+    function viewJob(jobId){
+      const jobs = load('jobs')||[]
+      const job = jobs.find(j=>j.id===jobId)
+      if(!job) return alert('job not found')
+      // if provider logged in, show accept flow
+      if(session.type==='provider'){
+        if(job.status!=='open') return alert('job not available')
+        if(!confirm(`Accept this job?\n${job.title}\n$${job.offer}\nYou agree to do the job to code, on time, and accept payment amount.`)) return
+        // accept
+        job.status='assigned'
+        job.providerId = session.user.id
+        job.assignedAt = Date.now()
+        save('jobs',jobs)
+        alert('Job assigned. Details: client will be shown below')
+        const clients = load('clients')||[]
+        const c = clients.find(x=>x.id===job.clientId)
+        alert(`Client phone: ${c?c.phone:'n/a'}\nAddress: ${c?c.address:'n/a'}\nTime: ${job.date}`)
+        show('provider-dashboard')
+        renderProviderJobs()
+        renderAllJobsList()
+      } else {
+        alert(`Job details:\n${job.title}\n${job.description}\n$${job.offer}\nDate: ${job.date}`)
+      }
+    }
+
+    function renderProviderJobs(){
+      if(session.type!=='provider') return document.getElementById('provider_jobs_list').innerHTML = '<div class="muted">Sign in as provider to see jobs.</div>'
+      const provSkills = session.user.skills
+      const jobs = (load('jobs')||[]).filter(j=>j.status==='open')
+      // filter by overlap in skills and job type
+      const matches = jobs.filter(j=>provSkills.some(s=>j.type.toLowerCase().includes(s) || s.includes(j.type.toLowerCase()) || j.type.toLowerCase().includes(s)))
+      const el = document.getElementById('provider_jobs_list')
+      if(!matches.length) {el.innerHTML='<div class="muted">No matching jobs at the moment.</div>';return}
+      el.innerHTML = matches.map(j=>`<div class="job-card"><strong>${j.title}</strong> — ${j.type} — ${j.date} — $${j.offer}<div class="muted small">${j.description}</div><div><button onclick="viewJob('${j.id}')">View / Accept</button></div></div>`).join('')
+    }
+
+    // provider completes job and client rates
+    function providerCompleteJob(jobId){
+      const jobs = load('jobs')||[]
+      const job = jobs.find(j=>j.id===jobId)
+      if(!job) return alert('job not found')
+      if(job.providerId!==session.user.id) return alert('not your job')
+      job.status='completed'
+      save('jobs',jobs)
+      // open rating page
+      document.getElementById('rate_summary').innerText = `Please rate job: ${job.title} — $${job.offer}`
+      session.ratingJobId = jobId
+      show('rate-job')
+    }
+
+    function submitRating(){
+      const r = Number(document.getElementById('rating_val').value)
+      const comments = document.getElementById('rating_comments').value
+      const jobs = load('jobs')||[]
+      const job = jobs.find(j=>j.id===session.ratingJobId)
+      if(!job) return alert('no job')
+      job.rating = r
+      job.comments = comments
+      job.status='done'
+      save('jobs',jobs)
+      alert('rating submitted — job removed from calendar view')
+      session.ratingJobId = null
+      show('calendar-view')
+      renderCalendar()
+    }
+
+    // Cancellation flow: if provider cancels a previously assigned job, a $50 fee is charged (informational only here)
+    function providerCancelJob(jobId){
+      const jobs = load('jobs')||[]
+      const job = jobs.find(j=>j.id===jobId)
+      if(!job) return alert('job not found')
+      if(job.providerId!==session.user.id) return alert('not your job')
+      if(!confirm('Cancel this job? Cancellation fee is $50.00')) return
+      job.status='open'
+      delete job.providerId
+      save('jobs',jobs)
+      alert('job cancelled. Note: cancellation fee applies ($50) — integrate payment capture in production.')
+      renderProviderJobs()
+      renderAllJobsList()
+    }
+
+    // expose some functions to the window for inline button handlers
+    window.show = show
+    window.clientRegister = clientRegister
+    window.clientConfirm = clientConfirm
+    window.clientLogin = clientLogin
+    window.toPricing = toPricing
+    window.toFinalizeJob = toFinalizeJob
+    window.submitJob = submitJob
+    window.providerRegister = providerRegister
+    window.providerLogin = providerLogin
+    window.renderCalendar = renderCalendar
+    window.viewJob = viewJob
+    window.renderProviderJobs = renderProviderJobs
+    window.providerCompleteJob = providerCompleteJob
+    window.providerCancelJob = providerCancelJob
+    window.submitRating = submitRating
+
+    // initial view
+    show('home')
+  </script></body>
+</html>
