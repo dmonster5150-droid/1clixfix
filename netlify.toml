@@ -1,14 +1,8 @@
 [build]
-  command = "npm run build"
-  publish = "dist"
-  functions = "netlify/functions"
+  publish = "/"
+  functions = "functions"
 
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-
-[[redirects]]
-  from = "https://1clikfixx.netlify.app/*"
-  to = "https://www.1clikfix.com/:splat"
-  status = 301

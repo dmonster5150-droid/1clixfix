@@ -1,0 +1,51 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Provider Subscribe</title>
+<link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet"></head><body class="bg-gray-50">
+<div class="max-w-2xl mx-auto p-6">
+  <a href="/index.html" class="text-sm text-gray-600">&larr; Back</a>
+  <div class="bg-white p-6 rounded-lg shadow mt-4">
+    <h1 class="text-2xl font-semibold mb-4">Provider Subscription</h1>
+    <p class="text-sm text-gray-600 mb-4">Subscribe to become a verified provider and see jobs in your area.</p>
+
+    <label class="block text-sm font-medium text-gray-700">Full name</label>
+    <input id="name" class="mt-1 mb-3 w-full border rounded p-2" />
+
+    <label class="block text-sm font-medium text-gray-700">Business name</label>
+    <input id="business" class="mt-1 mb-3 w-full border rounded p-2" />
+
+    <label class="block text-sm font-medium text-gray-700">Email</label>
+    <input id="email" class="mt-1 mb-3 w-full border rounded p-2" />
+
+    <label class="block text-sm font-medium text-gray-700">Phone</label>
+    <input id="phone" class="mt-1 mb-3 w-full border rounded p-2" />
+
+    <button id="subscribe" class="bg-orange-500 text-white px-4 py-2 rounded">Subscribe Now ($20.99)</button>
+    <p id="msg" class="mt-3 text-sm text-green-600 hidden">Subscribed — redirecting to payment...</p>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { firebaseConfig } from "/src/firebase/firebaseConfig.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+document.getElementById('subscribe').addEventListener('click', async ()=>{
+  const name = document.getElementById('name').value.trim();
+  const business = document.getElementById('business').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  if(!name || !email){ alert('Please enter name and email'); return; }
+
+  try{
+    const docRef = await addDoc(collection(db,'providers'), { name, business, email, phone, subscribed:false, createdAt: serverTimestamp() });
+    const providerId = docRef.id;
+    // request payment link from Netlify function
+    const res = await fetch('/.netlify/functions/createPaymentLink', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ providerId, type:'subscription' }) });
+    const data = await res.json();
+    if(data && data.url){ document.getElementById('msg').classList.remove('hidden'); setTimeout(()=>{ window.location.href = data.url; }, 600); } else { alert('Payment link error'); }
+  }catch(e){ alert('Error: '+e.message); }
+});
+</script>
+</body></html>

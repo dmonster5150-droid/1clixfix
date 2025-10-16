@@ -1,0 +1,56 @@
+<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Provider Calendar</title>
+<link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+<style>body{font-family:Inter,Arial,Helvetica,sans-serif}</style>
+</head><body class="bg-gray-50">
+<div class="max-w-6xl mx-auto p-6">
+  <a href="/index.html" class="text-sm text-gray-600">&larr; Back</a>
+  <div class="bg-white p-4 rounded shadow mt-4">
+    <h1 class="text-xl font-semibold mb-4">Provider Calendar</h1>
+    <div id="notice" class="mb-4 text-sm text-gray-700">Checking subscription...</div>
+    <div id='calendar'></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { firebaseConfig } from "/src/firebase/firebaseConfig.js";
+import { Calendar } from 'https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.esm.min.js';
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let providerId = prompt('Enter your Provider ID for demo login (paste provider doc id)');
+if(!providerId){ document.getElementById('notice').innerText='No provider id provided.'; throw new Error('no provider id'); }
+
+async function checkSubscribed(){
+  const res = await fetch('/.netlify/functions/getProvider?providerId='+providerId);
+  const json = await res.json();
+  if(!json || !json.exists){ document.getElementById('notice').innerText='Provider not found.'; return false; }
+  if(!json.data.subscribed){ document.getElementById('notice').innerText='You are not subscribed. Please subscribe to access jobs.'; return false; }
+  document.getElementById('notice').innerText='Subscribed — loading jobs...';
+  return true;
+}
+
+async function loadJobs(){
+  const res = await fetch('/.netlify/functions/getOpenJobs');
+  const json = await res.json();
+  const events = (json.jobs||[]).map(j=>({ id:j.id, title: j.description.slice(0,40), start: j.date + 'T' + (j.time||'09:00'), extendedProps: j }));
+  const calendarEl = document.getElementById('calendar');
+  const calendar = new Calendar(calendarEl, { initialView: 'dayGridMonth', height:650, events, eventClick: (info)=>onEventClick(info) });
+  calendar.render();
+}
+
+function onEventClick(info){
+  const j = info.event.extendedProps;
+  const ok = confirm('Accept job: '+j.description+' on '+j.date+'?');
+  if(ok){
+    fetch('/.netlify/functions/assignJob', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ jobId: j.id, providerId }) })
+    .then(r=>r.json()).then(d=>{ if(d.ok){ alert('Job assigned'); location.reload(); } else alert('Error assigning'); });
+  }
+}
+
+(async ()=>{ if(await checkSubscribed()) await loadJobs(); })();
+</script>
+</body></html>

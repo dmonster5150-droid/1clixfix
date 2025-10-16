@@ -1,5 +1,55 @@
 <!doctype html>
 <html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
-<body><div id="root"></div><script type="module" src="/src/main.jsx"></script></body>
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>1ClikFix</title>
+  <link rel="icon" href="/public/logo-full.svg">
+  <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+  <style>body{font-family:Inter,Arial,Helvetica,sans-serif}</style>
+</head>
+<body class="bg-gray-50">
+  <header class="bg-white shadow-sm">
+    <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <img src="/public/logo-full.svg" class="h-12" alt="1ClikFix">
+        <nav class="hidden md:flex gap-4 text-sm text-gray-700">
+          <a href="/src/pages/Home.html">Home</a>
+          <a href="/src/pages/ClientRegister.html">Post a Job</a>
+        </nav>
+      </div>
+      <div class="flex gap-3">
+        <a href="/src/pages/ProviderSubscribe.html" class="bg-orange-500 text-white px-4 py-2 rounded-md text-sm">Subscribe</a>
+        <a href="/src/pages/Login.html" class="text-gray-700 px-3 py-2 rounded-md text-sm">Sign in</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 py-16 text-center">
+    <h1 class="text-4xl font-bold text-gray-900 mb-4">Fix it fast with 1ClikFix</h1>
+    <p class="text-gray-600 mb-8">Post jobs, get verified providers, accept jobs on your schedule.</p>
+    <div class="flex justify-center gap-4">
+      <a class="bg-blue-600 text-white px-6 py-3 rounded-lg" href="/src/pages/ClientRegister.html">I'm a Client — Post a Job</a>
+      <a class="bg-black text-white px-6 py-3 rounded-lg" href="/src/pages/ProviderSubscribe.html">I'm a Provider — Subscribe</a>
+    </div>
+    <section class="mt-12 text-left bg-white p-6 rounded-lg shadow-sm">
+      <h2 class="text-xl font-semibold mb-2">How it works</h2>
+      <ol class="list-decimal list-inside text-gray-700">
+        <li>Clients post jobs with date, location and budget.</li>
+        <li>Subscribed providers see jobs on their private calendar.</li>
+        <li>Providers accept jobs; clients receive confirmation.</li>
+      </ol>
+    </section>
+  </main>
+
+  <footer class="bg-white border-t mt-12">
+    <div class="max-w-4xl mx-auto px-4 py-6 flex justify-between text-sm text-gray-600">
+      <div>© 2025 1ClikFix</div>
+      <div class="flex gap-4">
+        <a href="/src/pages/terms.html">Terms</a>
+        <a href="/src/pages/privacy.html">Privacy</a>
+        <a href="/src/pages/disclaimer.html">Disclaimer</a>
+      </div>
+    </div>
+  </footer>
+</body>
 </html>
